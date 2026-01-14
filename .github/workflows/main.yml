@@ -5,8 +5,7 @@ on:
 
 jobs:
   build:
-    # 1. 호환성을 위해 Windows 2019 환경 유지
-    runs-on: windows-2019
+    runs-on: windows-latest # 최신 SDK가 포함된 환경 사용
     
     steps:
     - name: Checkout MemReduct
@@ -23,18 +22,31 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
 
-    # 2. [추가된 단계] 프로젝트 파일 내용을 직접 수정합니다.
-    # "stdclatest"라는 단어를 찾아서 "stdc17"로 바꿔치기 합니다.
-    - name: Patch Project File
+    # [핵심 단계] 프로젝트 파일을 강제로 수정하여 호환성 확보
+    - name: Patch Project Settings
+      shell: pwsh
       run: |
-        powershell -Command "(Get-Content memreduct/memreduct.vcxproj) -replace 'stdclatest', 'stdc17' | Set-Content memreduct/memreduct.vcxproj"
+        $proj = "memreduct/memreduct.vcxproj"
+        $content = Get-Content $proj
+        # 1. 지원 안되는 stdclatest를 stdc17로 변경
+        $content = $content -replace 'stdclatest', 'stdc17'
+        # 2. 강제로 v143(VS2022) 툴셋 사용하도록 변경
+        $content = $content -replace '<PlatformToolset>v145</PlatformToolset>', '<PlatformToolset>v143</PlatformToolset>'
+        # 3. 경고를 에러로 처리하는 옵션 제거
+        $content = $content -replace '<TreatWarningsAsErrors>true</TreatWarningsAsErrors>', '<TreatWarningsAsErrors>false</TreatWarningsAsErrors>'
+        Set-Content $proj $content
 
-    # 3. 컴파일 실행
-    # 이제 파일 내용이 바뀌었으므로 에러가 나지 않을 것입니다.
+    # [빌드 실행] 환경 변수와 SDK 버전을 명시적으로 지정
     - name: Build Solution
       run: |
         cd memreduct
-        msbuild memreduct.sln -p:Configuration=Release -p:Platform=x64 -p:PlatformToolset=v142 -p:TreatWarningsAsErrors=false
+        msbuild memreduct.sln `
+          -p:Configuration=Release `
+          -p:Platform=x64 `
+          -p:PlatformToolset=v143 `
+          -p:WindowsTargetPlatformVersion=10.0 `
+          -p:CharacterSet=Unicode `
+          -p:TreatWarningsAsErrors=false
 
     - name: Upload EXE
       uses: actions/upload-artifact@v4
