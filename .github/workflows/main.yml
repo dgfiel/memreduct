@@ -1,37 +1,38 @@
 name: Make MemReduct EXE
 
 on:
-  workflow_dispatch: # 버튼을 눌러서 수동으로 실행하게 해주는 설정
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     
     steps:
-    # 1. 사용자의 memreduct 소스 코드 가져오기 (v4로 업데이트)
+    # 1. 소스 코드 가져오기
     - name: Checkout MemReduct
       uses: actions/checkout@v4
       with:
         path: memreduct
 
-    # 2. 필수 라이브러리 routine 가져오기 (v4로 업데이트)
+    # 2. 라이브러리 가져오기
     - name: Checkout Routine Library
       uses: actions/checkout@v4
       with:
         repository: henrypp/routine
         path: routine
 
-    # 3. MSBuild(컴파일 도구) 세팅
+    # 3. MSBuild 설정
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
 
-    # 4. 컴파일 실행 (64비트 Release 모드)
+    # 4. 컴파일 실행 (수정된 부분)
+    # v145 대신 현재 서버에 깔려있는 v143을 강제로 사용하도록 명령을 추가했습니다.
     - name: Build Solution
       run: |
         cd memreduct
-        msbuild memreduct.sln -property:Configuration=Release -property:Platform=x64
+        msbuild memreduct.sln -property:Configuration=Release -property:Platform=x64 -property:PlatformToolset=v143
 
-    # 5. 만들어진 EXE 파일을 다운로드 가능하게 업로드 (핵심 수정: v3 -> v4)
+    # 5. 결과물 업로드
     - name: Upload EXE
       uses: actions/upload-artifact@v4
       with:
