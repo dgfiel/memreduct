@@ -480,6 +480,9 @@ VOID _app_memoryclean (
 
 	_r_str_printf (buffer2, RTL_NUMBER_OF (buffer2), _r_locale_getstring (IDS_STATUS_CLEANED), buffer1);
 
+
+// Just Return
+    if (src == SOURCE_CMDLINE) return;	
 	if (src == SOURCE_CMDLINE)
 	{
 		if (_r_config_getboolean (L"BalloonCleanResults", TRUE, NULL))
@@ -2798,3 +2801,4 @@ INT APIENTRY wWinMain (
 
 	return _r_wnd_message_callback (hwnd, MAKEINTRESOURCEW (IDA_MAIN));
 }
+
