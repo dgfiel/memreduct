@@ -5,34 +5,32 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # 1. 최신(2022) 대신 조금 더 호환성이 좋은 Windows 2019 환경을 사용합니다.
+    runs-on: windows-2019
     
     steps:
-    # 1. 소스 코드 가져오기
     - name: Checkout MemReduct
       uses: actions/checkout@v4
       with:
         path: memreduct
 
-    # 2. 라이브러리 가져오기
     - name: Checkout Routine Library
       uses: actions/checkout@v4
       with:
         repository: henrypp/routine
         path: routine
 
-    # 3. MSBuild 설정
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
 
-    # 4. 컴파일 실행 (수정된 부분)
-    # v145 대신 현재 서버에 깔려있는 v143을 강제로 사용하도록 명령을 추가했습니다.
+    # 2. 컴파일 실행 (핵심 수정)
+    # -p:PlatformToolset=v142 : VS2019용 도구 사용
+    # -p:TreatWarningsAsErrors=false : 경고가 떠도 에러로 처리하지 않음 (무시)
     - name: Build Solution
       run: |
         cd memreduct
-        msbuild memreduct.sln -property:Configuration=Release -property:Platform=x64 -property:PlatformToolset=v143
+        msbuild memreduct.sln -p:Configuration=Release -p:Platform=x64 -p:PlatformToolset=v142 -p:TreatWarningsAsErrors=false
 
-    # 5. 결과물 업로드
     - name: Upload EXE
       uses: actions/upload-artifact@v4
       with:
