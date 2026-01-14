@@ -23,14 +23,18 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
 
-    # 2. 컴파일 실행 (여기가 핵심 수정됨)
-    # -p:PlatformToolset=v142 : 2019년 도구 사용
-    # -p:TreatWarningsAsErrors=false : 경고 무시
-    # -p:LanguageStandard_C=stdc17 : "stdclatest" 대신 "C17" 표준을 강제로 사용
+    # 2. [추가된 단계] 프로젝트 파일 내용을 직접 수정합니다.
+    # "stdclatest"라는 단어를 찾아서 "stdc17"로 바꿔치기 합니다.
+    - name: Patch Project File
+      run: |
+        powershell -Command "(Get-Content memreduct/memreduct.vcxproj) -replace 'stdclatest', 'stdc17' | Set-Content memreduct/memreduct.vcxproj"
+
+    # 3. 컴파일 실행
+    # 이제 파일 내용이 바뀌었으므로 에러가 나지 않을 것입니다.
     - name: Build Solution
       run: |
         cd memreduct
-        msbuild memreduct.sln -p:Configuration=Release -p:Platform=x64 -p:PlatformToolset=v142 -p:TreatWarningsAsErrors=false -p:LanguageStandard_C=stdc17
+        msbuild memreduct.sln -p:Configuration=Release -p:Platform=x64 -p:PlatformToolset=v142 -p:TreatWarningsAsErrors=false
 
     - name: Upload EXE
       uses: actions/upload-artifact@v4
